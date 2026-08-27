@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { Activity, FlaskConical, Gauge, ListTree, Radio } from 'lucide-react'
-import { useModels } from '../../api/hooks'
+import { useModels, useMonitoringCurrent } from '../../api/hooks'
 import { StatusBadge } from '../StatusBadge'
 import styles from './AppShell.module.css'
 
@@ -16,6 +16,7 @@ const NAV_ITEMS = [
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: models } = useModels()
   const activeModel = models?.find((m) => m.status === 'active')
+  const { data: monitoring } = useMonitoringCurrent()
 
   return (
     <div className={styles.shell}>
@@ -37,7 +38,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className={styles.modelInfo}>
                 Modelo ativo: <strong>{activeModel.name}</strong>
               </span>
-              <StatusBadge state="normal" size="sm" />
+              <StatusBadge state={monitoring?.state ?? 'insufficient_data'} size="sm" />
             </>
           ) : (
             <StatusBadge state="model_unavailable" size="sm" />
