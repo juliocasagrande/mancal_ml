@@ -51,6 +51,10 @@ def main() -> None:
     decision = json.loads((INTERIM_DIR / "decision_matrix.json").read_text(encoding="utf-8"))
     champion_name = decision["champion"]
 
+    # Extensão pós-MVP (Seção 20 do blueprint) — opcional, ver run_drift_report.py.
+    drift_path = INTERIM_DIR / "drift_report.json"
+    drift_report = json.loads(drift_path.read_text(encoding="utf-8")) if drift_path.exists() else None
+
     Session = get_session_factory()
     with Session() as db:
         db.query(Alert).delete()
@@ -73,6 +77,7 @@ def main() -> None:
                 "unit": "G1",
                 "author": "Yasir Saleem Afridi",
                 "scope_note": "Apenas os 6 arquivos mensais da unidade G1 — ver docs/formulacao-do-problema.md",
+                **({"drift_report": drift_report} if drift_report is not None else {}),
             },
         )
         db.add(dataset)

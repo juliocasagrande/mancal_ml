@@ -171,6 +171,7 @@ npm install
 .\.venv\Scripts\python.exe backend\scripts\train_lstm.py --config configs\lstm_autoencoder.yaml
 .\.venv\Scripts\python.exe backend\scripts\run_lstm_evaluation.py
 .\.venv\Scripts\python.exe backend\scripts\run_decision_matrix.py
+.\.venv\Scripts\python.exe backend\scripts\run_drift_report.py
 ```
 
 ### Banco de dados e API
@@ -253,8 +254,8 @@ incluindo um ADR por marco em `docs/decisoes/`.
   diferenciar "unidade parada" de "unidade operando com vibração
   anômala" (ver `docs/formulacao-do-problema.md`).
 - Extensões possíveis, apenas após validação do MVP: 1D-CNN Autoencoder,
-  SHAP para o modelo clássico, detecção de drift, simulação de
-  streaming, autenticação na API.
+  SHAP para o modelo clássico, simulação de streaming, autenticação na
+  API. Detecção de drift já implementada (`docs/decisoes/0007-deteccao-de-drift.md`).
 
 ## Licença
 

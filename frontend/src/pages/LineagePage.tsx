@@ -1,8 +1,17 @@
-import { useDatasets, useEvaluations, useModels } from '../api/hooks'
+import { ApiError } from '../api/client'
+import { useDatasetDrift, useDatasets, useEvaluations, useModels } from '../api/hooks'
+import type { DriftSeverity } from '../api/types'
 import { Card } from '../components/Card'
 import { StateBoundary } from '../components/StateBoundary'
 import pageStyles from './Page.module.css'
 import styles from './LineagePage.module.css'
+
+const DRIFT_SEVERITY_LABEL: Record<DriftSeverity, string> = {
+  none: 'Sem drift',
+  moderate: 'Moderado',
+  significant: 'Significativo',
+  constante_no_treino: 'Constante no treino',
+}
 
 const REPO_URL = 'https://github.com/juliocasagrande/mancal_ml'
 
@@ -16,6 +25,8 @@ export function LineagePage() {
   const models = useModels()
   const evaluations = useEvaluations()
   const dataset = datasets.data?.[0]
+  const drift = useDatasetDrift(dataset?.id)
+  const driftNotComputed = drift.error instanceof ApiError && drift.error.status === 404
 
   return (
     <div className={pageStyles.page}>
@@ -99,6 +110,59 @@ export function LineagePage() {
               </li>
             ))}
           </ul>
+        </StateBoundary>
+      </Card>
+
+      <Card title="Drift de dados por período (extensão pós-MVP)">
+        <StateBoundary
+          isLoading={drift.isLoading}
+          isError={drift.isError && !driftNotComputed}
+          error={drift.error}
+          isEmpty={driftNotComputed || (drift.data?.periods.length ?? 0) === 0}
+          emptyLabel="Relatório de drift não computado para este dataset — rodar backend/scripts/run_drift_report.py e backend/scripts/populate_db.py."
+          onRetry={() => drift.refetch()}
+        >
+          {drift.data && (
+            <>
+              <p className={styles.driftNote}>
+                {drift.data.method}, contra {drift.data.reference}. Limiares (PSI):{' '}
+                {Object.entries(drift.data.severity_thresholds)
+                  .map(([k, v]) => `${DRIFT_SEVERITY_LABEL[k as DriftSeverity] ?? k} ${v}`)
+                  .join(' · ')}
+                . Heurística de mercado, não recalibrada para este dataset — ver docs/resultados.md.
+              </p>
+              <div className={styles.tableScroll}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th scope="col">Período</th>
+                      <th scope="col">Split</th>
+                      <th scope="col">PSI médio</th>
+                      <th scope="col">Severidade</th>
+                      <th scope="col">Atributo com maior drift</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {drift.data.periods.map((p) => (
+                      <tr key={p.period}>
+                        <td>{p.period}</td>
+                        <td>{p.split}</td>
+                        <td className={styles.mono}>{p.overall_psi.toFixed(3)}</td>
+                        <td>
+                          <span className={`${styles.statusPill} ${styles[`drift_${p.severity}`]}`}>
+                            {DRIFT_SEVERITY_LABEL[p.severity]}
+                          </span>
+                        </td>
+                        <td className={styles.mono}>
+                          {p.top_features[0] ? `${p.top_features[0].feature} (${p.top_features[0].psi.toFixed(2)})` : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </StateBoundary>
       </Card>
 

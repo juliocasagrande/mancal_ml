@@ -131,6 +131,31 @@ export interface Alert {
   window_end: string
 }
 
+export type DriftSeverity = 'none' | 'moderate' | 'significant' | 'constante_no_treino'
+
+export interface DriftFeature {
+  feature: string
+  psi: number
+  severity: DriftSeverity
+}
+
+export interface DriftPeriod {
+  split: string
+  period: string
+  reference_n: number
+  current_n: number
+  overall_psi: number
+  severity: DriftSeverity
+  top_features: DriftFeature[]
+}
+
+export interface DriftReport {
+  reference: string
+  method: string
+  severity_thresholds: Record<string, string>
+  periods: DriftPeriod[]
+}
+
 export interface EvaluationRun {
   id: string
   model_version_id: string

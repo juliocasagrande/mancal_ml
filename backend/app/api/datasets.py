@@ -42,3 +42,17 @@ def dataset_quality(dataset_id: str, db: Session = Depends(get_db)) -> dict:
         "pipeline_version": run.pipeline_version,
         "quality_report": run.quality_report,
     }
+
+
+@router.get("/{dataset_id}/drift")
+def dataset_drift(dataset_id: str, db: Session = Depends(get_db)) -> dict:
+    """Extensão pós-MVP (Seção 20 do blueprint): drift de dados por período,
+    calculado por `backend/scripts/run_drift_report.py`. Ausente para
+    datasets populados antes dessa extensão."""
+    dataset = db.query(Dataset).filter(Dataset.id == parse_uuid(dataset_id)).first()
+    if dataset is None:
+        raise HTTPException(status_code=404, detail="Dataset não encontrado")
+    report = dataset.dataset_metadata.get("drift_report")
+    if report is None:
+        raise HTTPException(status_code=404, detail="Relatório de drift não disponível para este dataset")
+    return report

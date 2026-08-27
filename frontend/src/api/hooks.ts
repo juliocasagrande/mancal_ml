@@ -4,6 +4,7 @@ import type {
   Alert,
   Dataset,
   DatasetQuality,
+  DriftReport,
   EvaluationRun,
   ModelVersion,
   MonitoringCurrent,
@@ -23,6 +24,15 @@ export function useDatasetQuality(datasetId: string | undefined) {
     queryKey: ['dataset-quality', datasetId],
     queryFn: () => apiGet<DatasetQuality>(`/api/datasets/${datasetId}/quality`),
     enabled: Boolean(datasetId),
+  })
+}
+
+export function useDatasetDrift(datasetId: string | undefined) {
+  return useQuery({
+    queryKey: ['dataset-drift', datasetId],
+    queryFn: () => apiGet<DriftReport>(`/api/datasets/${datasetId}/drift`),
+    enabled: Boolean(datasetId),
+    retry: false, // 404 é esperado para datasets sem relatório de drift computado
   })
 }
 

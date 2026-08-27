@@ -38,7 +38,11 @@ local.
    comparação com o envelope saudável, aviso sobre limites da explicação.
 7. **Mostrar Model Card, dataset e versão do pipeline** — Página 5
    (Linhagem): origem/licença do dataset, versão do modelo, limitações e
-   usos não recomendados.
+   usos não recomendados. O card de drift de dados (extensão pós-MVP) é
+   um bom gancho extra: mesmo agosto (validação, saudável) mostra drift
+   significativo nos canais de temperatura — evidência quantitativa de
+   que 2 meses de treino não cobrem a variação sazonal completa
+   (`docs/decisoes/0007-deteccao-de-drift.md`).
 8. **Concluir com a validação necessária antes de uso real** — o sistema
    é apoio à decisão; qualquer promoção a alarme operacional exigiria
    rótulos confirmados por um especialista de manutenção, mais eventos

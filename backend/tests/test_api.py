@@ -13,7 +13,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.db.base import Base
-from app.db.models import Alert, ModelVersion, PredictionRun
+from app.db.models import Alert, Dataset, ModelVersion, PredictionRun
 from app.db.session import get_db
 from app.main import app
 
@@ -78,6 +78,38 @@ def test_datasets_empty_list(client) -> None:
 def test_dataset_quality_404_for_unknown_dataset(client) -> None:
     response = client.get("/api/datasets/11111111-1111-1111-1111-111111111111/quality")
     assert response.status_code == 404
+
+
+def test_dataset_drift_404_for_unknown_dataset(client) -> None:
+    response = client.get("/api/datasets/11111111-1111-1111-1111-111111111111/drift")
+    assert response.status_code == 404
+
+
+def test_dataset_drift_404_when_report_not_computed(db_session, client) -> None:
+    dataset = Dataset(
+        name="d", source_url="https://example.com", license="CC-BY-4.0", version="v1", dataset_metadata={}
+    )
+    db_session.add(dataset)
+    db_session.commit()
+
+    response = client.get(f"/api/datasets/{dataset.id}/drift")
+    assert response.status_code == 404
+
+
+def test_dataset_drift_returns_report_when_present(db_session, client) -> None:
+    dataset = Dataset(
+        name="d",
+        source_url="https://example.com",
+        license="CC-BY-4.0",
+        version="v1",
+        dataset_metadata={"drift_report": {"periods": [{"period": "Oct.csv", "overall_psi": 7.4}]}},
+    )
+    db_session.add(dataset)
+    db_session.commit()
+
+    response = client.get(f"/api/datasets/{dataset.id}/drift")
+    assert response.status_code == 200
+    assert response.json()["periods"][0]["period"] == "Oct.csv"
 
 
 def test_invalid_uuid_returns_422_not_500(client) -> None:

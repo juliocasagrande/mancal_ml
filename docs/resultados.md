@@ -152,6 +152,30 @@ dados com mais de um evento-proxy (ou, idealmente, rótulos confirmados
 por um especialista de manutenção) antes de comprometer esta escolha em
 produção.
 
+## Detecção de drift de dados (extensão pós-MVP)
+
+`backend/app/evaluation/drift.py` mede, por atributo derivado, o
+Population Stability Index (PSI) entre o treino (June+July) e cada mês
+de validação/teste — ver `backend/scripts/run_drift_report.py` e
+`docs/decisoes/0007-deteccao-de-drift.md` para o método completo.
+
+**Achado principal: mesmo agosto (validação, saudável) mostra drift
+"significativo" (PSI médio 1,40), dominado pelos canais de temperatura**
+(`temp_turbine_guide_pad1`, PSI ~12). Isso não é um artefato de
+implementação — o treino (jun/jul) cobre uma faixa de temperatura mais
+ampla (45,9–56,3°C) do que agosto, que opera de forma estável perto do
+topo dessa faixa (55,4–56,7°C). Ou seja, **2 meses de treino não capturam
+a variação sazonal completa do regime térmico** — evidência quantitativa
+direta da nota qualitativa de robustez atribuída à LSTM na matriz de
+decisão (0,7, com a justificativa "incerteza sobre generalização com
+apenas 2 meses de treino").
+
+Com os limiares-padrão de PSI (heurística de risco de crédito, não
+recalibrada para este dataset), quase todos os períodos leiam como
+"significativo" — a comparação relativa entre períodos (PSI de outubro
+≈7,4 vs. agosto ≈1,4) é mais informativa que o rótulo absoluto de
+severidade neste caso específico.
+
 ## Próximos passos (Marco 6+)
 
 - Persistir catálogo de datasets, versões de modelo e previsões no
