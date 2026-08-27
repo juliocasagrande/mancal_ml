@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: >-
+  Se você utilizar este repositório, cite tanto o código quanto o dataset
+  original listado abaixo.
+title: hydro-bearing-predictive-maintenance
+type: software
+authors:
+  - name: Julio Casagrande
+url: "https://github.com/juliocasagrande27/hydro-bearing-predictive-maintenance"
+license: MIT
+preferred-citation:
+  type: dataset
+  title: Bearing Vibration Dataset of a Hydropower Project
+  authors:
+    - name: "Yasir Saleem Afridi"
+  doi: "10.6084/m9.figshare.21290895.v1"
+  date-released: "2022-10-06"
+  license: "CC-BY-4.0"
+  url: "https://figshare.com/articles/dataset/Bearing_Vibration_Dataset_of_a_Hydropower_Project/21290895"
+  notes: >-
+    Dataset original utilizado como fonte de dados. Este projeto não é
+    afiliado aos autores do dataset nem à usina hidrelétrica de origem.

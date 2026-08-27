@@ -1,0 +1,70 @@
+{
+  "dataset_name": "Bearing Vibration Dataset of a Hydropower Project",
+  "source_url": "https://figshare.com/articles/dataset/Bearing_Vibration_Dataset_of_a_Hydropower_Project/21290895",
+  "doi": "10.6084/m9.figshare.21290895.v1",
+  "author": "Yasir Saleem Afridi",
+  "publication_date": "2022-10-06",
+  "license": "CC-BY-4.0",
+  "download_date": "2026-08-26",
+  "files": [
+    {
+      "local_name": "June.csv",
+      "download_url": "https://ndownloader.figshare.com/files/37772130",
+      "sha256": "9716dce4414b7a11874543587a5e09a9a7903f868144e0adf6335a5af4a85b00",
+      "size_bytes": 456515,
+      "unit": "G1"
+    },
+    {
+      "local_name": "July.csv",
+      "download_url": "https://ndownloader.figshare.com/files/37772127",
+      "sha256": "8a5a39cae278de69b3b9a012476a418f1b0de45e85e40bb30becb16e5753c411",
+      "size_bytes": 458126,
+      "unit": "G1"
+    },
+    {
+      "local_name": "Aug.csv",
+      "download_url": "https://ndownloader.figshare.com/files/37772124",
+      "sha256": "f926a935fbf6a783ffb1373fa75b710598b7e109002fc62539aa8a74d8fb97fe",
+      "size_bytes": 452728,
+      "unit": "G1",
+      "note": "Figshare file ID 37771965 é um duplicado byte-a-byte deste arquivo (mesmo SHA-256); não baixado separadamente."
+    },
+    {
+      "local_name": "SEP.csv",
+      "download_url": "https://ndownloader.figshare.com/files/37772139",
+      "sha256": "af48cead6f7abbb66d9d7bc04e2d688b6a0ea22f21256644ed1b30559338c679",
+      "size_bytes": 438737,
+      "unit": "G1"
+    },
+    {
+      "local_name": "Oct.csv",
+      "download_url": "https://ndownloader.figshare.com/files/37772136",
+      "sha256": "9c76f93cc2171c8ac4af62102110f9f69244a48bae2a2f65163bcef56f96cbb9",
+      "size_bytes": 427540,
+      "unit": "G1"
+    },
+    {
+      "local_name": "Nov.csv",
+      "download_url": "https://ndownloader.figshare.com/files/37772133",
+      "sha256": "df05bac98fee4b922444847e0ced027bf174f2d716bd21977daced3bb8165c78",
+      "size_bytes": 447193,
+      "unit": "G1"
+    },
+    {
+      "local_name": "vibration_data.csv",
+      "download_url": "https://ndownloader.figshare.com/files/37772145",
+      "sha256": "7e098849c4fcd5fb92f5cc202333329cb3628f4688e8695000238c85c8e0831e",
+      "size_bytes": 301215,
+      "unit": "G4",
+      "note": "Excluído do escopo do MVP: unidade diferente (G4), esquema de colunas diferente, sem continuidade temporal com os arquivos de G1."
+    },
+    {
+      "local_name": "vibration_data_G4_15-05-2022_to_10-05-2022.csv",
+      "download_url": "https://ndownloader.figshare.com/files/37772142",
+      "sha256": "ad9e26f7b7b9abb6eab928a6305bc598e7dc32b2ab634d5ce5b2876629d0709c",
+      "size_bytes": 397797,
+      "unit": "G4",
+      "note": "Excluído do escopo do MVP pelo mesmo motivo do arquivo acima."
+    }
+  ]
+}

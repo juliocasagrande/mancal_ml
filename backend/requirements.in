@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+pandas
+numpy
+scipy
+scikit-learn
+sqlalchemy
+psycopg[binary]
+alembic
+joblib
+httpx
+pytest
+ruff
+mypy
