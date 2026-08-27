@@ -5,11 +5,11 @@
 > turbina hidráulica, com avaliação temporal, índice de saúde e
 > explicabilidade operacional.
 
-**Status:** em construção — Marcos 0 a 4 concluídos (repositório,
-auditoria do dataset, pipeline temporal, baselines e LSTM Autoencoder).
-Resultados comparativos em `docs/resultados.md`. Este README será
-reescrito com resultados, screenshots e arquitetura ao final (ver
-`docs/decisoes/`).
+**Status:** em construção — Marcos 0 a 5 concluídos (repositório,
+auditoria do dataset, pipeline temporal, baselines, LSTM Autoencoder e
+matriz de decisão). Resultados e modelo campeão em `docs/resultados.md`
+e `docs/protocolo-de-avaliacao.md`. Este README será reescrito com
+resultados, screenshots e arquitetura ao final (ver `docs/decisoes/`).
 
 O sistema é um apoio à decisão. Não emite comandos para equipamentos nem se
 apresenta como solução certificada para operação real.
@@ -78,6 +78,15 @@ Compara baseline estatístico e Isolation Forest e grava
 Treina a LSTM Autoencoder (CPU, ~35s) e avalia no mesmo protocolo dos
 baselines. Artefatos em `artifacts/lstm_autoencoder_v1/` (pesos, scaler
 de sinal e config com o limiar escolhido na validação).
+
+```powershell
+.\.venv\Scripts\python.exe backend\scripts\run_decision_matrix.py
+```
+
+Aplica a matriz de decisão ponderada (Seção 9.4 do blueprint) aos três
+modelos e declara o campeão. Protocolo completo em
+`docs/protocolo-de-avaliacao.md`, discussão do resultado em
+`docs/resultados.md`.
 
 ## Testes
 

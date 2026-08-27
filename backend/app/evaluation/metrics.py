@@ -45,6 +45,27 @@ def compute_window_metrics(scores: np.ndarray, labels: np.ndarray, threshold: fl
     )
 
 
+def detection_delay_windows(predictions: np.ndarray, labels: np.ndarray) -> float:
+    """Atraso médio de detecção, em nº de janelas, entre o início de cada
+    evento verdadeiro e a primeira janela prevista que o sobrepõe.
+    Eventos nunca detectados contam com o atraso máximo possível (a
+    duração do próprio evento), para não sumir da média por omissão.
+    """
+    true_events = _group_into_events(labels.astype(bool))
+    if not true_events:
+        return float("nan")
+
+    predicted_indices = np.flatnonzero(predictions.astype(bool))
+    delays = []
+    for start, end in true_events:
+        in_event = predicted_indices[(predicted_indices >= start) & (predicted_indices < end)]
+        if len(in_event) > 0:
+            delays.append(int(in_event.min()) - start)
+        else:
+            delays.append(end - start)  # nunca detectado dentro do evento
+    return float(np.mean(delays))
+
+
 @dataclass
 class EventMetrics:
     n_true_events: int

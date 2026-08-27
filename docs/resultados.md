@@ -104,14 +104,61 @@ scripts — não versionados no Git.)
   o baseline. A escolha final do campeão, com a matriz de decisão
   completa, fica para o Marco 5.
 
-## Próximos passos (Marco 5)
+## Matriz de decisão e modelo campeão (Marco 5)
 
-- Aplicar a matriz de decisão ponderada da Seção 9.4 do blueprint aos
-  três modelos e declarar o campeão de forma explícita e justificada.
-- Testar mais de uma dimensão de janela e mais de um limiar (Seção 10 do
-  blueprint) antes de finalizar a escolha.
-- Implementar explicabilidade (contribuição por variável/tempo na
-  reconstrução da LSTM) para a Página 4 do frontend.
+Protocolo completo em `docs/protocolo-de-avaliacao.md`. Reprodução:
+
+```powershell
+.\.venv\Scripts\python.exe backend\scripts\run_decision_matrix.py
+```
+
+Critérios qualitativos usados (não medidos diretamente — hipótese
+operacional documentada):
+
+| Modelo | Robustez (0-1) | Justificativa | Explicabilidade (0-1) | Justificativa |
+|---|---:|---|---:|---|
+| `baseline_zscore` | 0,5 | usa mediana/MAD fixas do treino; não se adapta a mudança de regime sem reajuste manual | 1,0 | score é literalmente o \|z\| de cada variável — o mais direto possível de explicar |
+| `isolation_forest` | 0,6 | não paramétrico, tolera não linearidade, mas sensível a atributos correlacionados/redundantes | 0,4 | score de isolamento não decompõe nativamente por variável (não implementado aqui) |
+| `lstm_autoencoder` | 0,7 | aprende padrões temporais não lineares; incerteza sobre generalização com apenas 2 meses de treino | 0,7 | erro de reconstrução decompõe naturalmente por canal e por instante (`app/evaluation/explainability.py`) |
+
+### Resultado da matriz (pesos da Seção 9.4 do blueprint)
+
+| Modelo | Score ponderado | event_recall | false_alarms/dia | atraso (janelas) | latência p95 (ms) |
+|---|---:|---:|---:|---:|---:|
+| `lstm_autoencoder` | **0,932** | 1,0 | 0,08 | 0 | ~1,0 |
+| `baseline_zscore` | 0,900 | 1,0 | 0,07 | 0 | ~0,01 |
+| `isolation_forest` | 0,550 | 1,0 | 0,30 | 0 | ~10,1 |
+
+**Campeão declarado: `lstm_autoencoder`, por margem estreita (0,932 vs.
+0,900 do baseline).**
+
+### Por que a margem é estreita e o que isso significa
+
+Com um único evento-proxy no teste, `event_recall` e `detection_delay`
+empatam entre os três modelos (ver limitação documentada no protocolo) —
+juntos, 50% do peso da matriz não discrimina nada aqui. O resultado final
+é decidido pelos 50% restantes: falso-alarme e latência favorecem
+claramente o baseline; robustez e explicabilidade (notas qualitativas)
+favorecem a LSTM. **A escolha do campeão é sensível às notas
+qualitativas atribuídas** — se `robustness`/`explainability` da LSTM
+fossem 0,1 mais baixas, o baseline venceria. Isto não invalida a escolha,
+mas ela deve ser lida como **uma hipótese operacional documentada, não
+uma conclusão estatisticamente robusta** — o próprio blueprint pede
+exatamente essa honestidade (Seção 9.4: "os pesos devem ser configuráveis
+e discutidos como hipótese operacional").
+
+Recomendação prática para uma decisão mais robusta: coletar mais meses de
+dados com mais de um evento-proxy (ou, idealmente, rótulos confirmados
+por um especialista de manutenção) antes de comprometer esta escolha em
+produção.
+
+## Próximos passos (Marco 6+)
+
+- Persistir catálogo de datasets, versões de modelo e previsões no
+  Railway PostgreSQL.
+- Expor os três modelos e a matriz de decisão via API (FastAPI).
+- Construir a interface React com as 5 páginas do blueprint, incluindo a
+  Página 4 (explicabilidade) usando `app/evaluation/explainability.py`.
 - Revisar o rótulo-proxy com mais cuidado — por exemplo, cruzando com a
   coluna `unit_speed_pct` para diferenciar "unidade parada" de "unidade
   operando com vibração anômala", que são fisicamente muito diferentes.

@@ -1,7 +1,7 @@
 import numpy as np
 
 from app.evaluation.labels import build_proxy_labels
-from app.evaluation.metrics import compute_event_metrics, compute_window_metrics
+from app.evaluation.metrics import compute_event_metrics, compute_window_metrics, detection_delay_windows
 
 
 def test_proxy_label_flags_low_power_windows() -> None:
@@ -45,6 +45,33 @@ def test_event_metrics_groups_contiguous_windows_into_one_event() -> None:
     assert metrics.n_detected_events == 1
     assert metrics.detection_rate == 1.0
     assert metrics.n_false_alarm_events == 0
+
+
+def test_detection_delay_is_zero_when_alarm_fires_at_event_start() -> None:
+    labels = np.array([False, True, True, True, False])
+    predictions = np.array([False, True, False, False, False])
+
+    delay = detection_delay_windows(predictions, labels)
+
+    assert delay == 0.0
+
+
+def test_detection_delay_counts_windows_of_lag() -> None:
+    labels = np.array([False, True, True, True, False])
+    predictions = np.array([False, False, False, True, False])
+
+    delay = detection_delay_windows(predictions, labels)
+
+    assert delay == 2.0  # evento começa no índice 1, alarme só no índice 3
+
+
+def test_detection_delay_uses_full_event_duration_when_never_detected() -> None:
+    labels = np.array([False, True, True, False])
+    predictions = np.array([False, False, False, False])
+
+    delay = detection_delay_windows(predictions, labels)
+
+    assert delay == 2.0  # duração do evento (índices 1-2)
 
 
 def test_event_metrics_counts_false_alarm_events_separately() -> None:
