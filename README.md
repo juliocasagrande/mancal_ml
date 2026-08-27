@@ -5,11 +5,12 @@
 > turbina hidráulica, com avaliação temporal, índice de saúde e
 > explicabilidade operacional.
 
-**Status:** em construção — Marcos 0 a 5 concluídos (repositório,
-auditoria do dataset, pipeline temporal, baselines, LSTM Autoencoder e
-matriz de decisão). Resultados e modelo campeão em `docs/resultados.md`
-e `docs/protocolo-de-avaliacao.md`. Este README será reescrito com
-resultados, screenshots e arquitetura ao final (ver `docs/decisoes/`).
+**Status:** em construção — Marcos 0 a 6 concluídos (repositório,
+auditoria do dataset, pipeline temporal, baselines, LSTM Autoencoder,
+matriz de decisão, Postgres no Railway e API FastAPI). Resultados e
+modelo campeão em `docs/resultados.md` e `docs/protocolo-de-avaliacao.md`.
+Este README será reescrito com resultados, screenshots e arquitetura ao
+final (ver `docs/decisoes/`).
 
 O sistema é um apoio à decisão. Não emite comandos para equipamentos nem se
 apresenta como solução certificada para operação real.
@@ -87,6 +88,25 @@ Aplica a matriz de decisão ponderada (Seção 9.4 do blueprint) aos três
 modelos e declara o campeão. Protocolo completo em
 `docs/protocolo-de-avaliacao.md`, discussão do resultado em
 `docs/resultados.md`.
+
+## Banco de dados e API (Marco 6)
+
+Requer um Postgres acessível via `DATABASE_URL` no `.env` (local ou
+Railway — ver `docs/decisoes/0004-railway-postgres-e-api.md`).
+
+```powershell
+cd backend
+..\.venv\Scripts\python.exe -m alembic upgrade head
+cd ..
+.\.venv\Scripts\python.exe backend\scripts\populate_db.py
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --port 8000
+```
+
+Endpoints principais: `/api/health`, `/api/datasets`,
+`/api/signals/summary`, `/api/signals/range`, `/api/models`,
+`/api/monitoring/current`, `/api/monitoring/timeline`, `/api/alerts`,
+`/api/evaluations`. Documentação interativa em
+`http://localhost:8000/docs`.
 
 ## Testes
 
