@@ -22,8 +22,8 @@ import torch
 from app.db.models import Alert, Dataset, EvaluationRun, IngestionRun, ModelVersion, PredictionRun, SignalSample
 from app.db.session import get_session_factory
 from app.evaluation.explainability import baseline_feature_contribution, lstm_feature_contribution
-from app.ingestion.schema import MODELING_COLUMNS, VALUE_COLUMNS
 from app.inference.lstm_inference import load_artifacts, score_windows
+from app.ingestion.schema import MODELING_COLUMNS, VALUE_COLUMNS
 
 ROOT = Path(__file__).resolve().parents[2]
 INTERIM_DIR = ROOT / "data" / "interim"
@@ -95,7 +95,10 @@ def main() -> None:
                 source_file=row.source_file,
                 split=row.split,
                 quality_flags={"has_missing": bool(row.has_missing)},
-                **{col: (None if pd.isna(getattr(row, col)) else float(getattr(row, col))) for col in VALUE_COLUMNS},
+                **{
+                    col: (None if pd.isna(getattr(row, col)) else float(getattr(row, col)))
+                    for col in VALUE_COLUMNS
+                },
             )
             for row in clean_df.itertuples(index=False)
         ]
@@ -205,7 +208,11 @@ def main() -> None:
             feature_names = [c for c in test_features_df.columns if c not in metadata_cols]
             x_train = sanitize_features(train_features_df.drop(columns=metadata_cols).to_numpy(dtype=float))
             x_test = sanitize_features(test_features_df.drop(columns=metadata_cols).to_numpy(dtype=float))
-            model = RobustZScoreBaseline().fit(x_train) if champion_name == "baseline_zscore" else IsolationForestModel().fit(x_train)
+            model = (
+                RobustZScoreBaseline().fit(x_train)
+                if champion_name == "baseline_zscore"
+                else IsolationForestModel().fit(x_train)
+            )
             scores = model.score(x_test)
             threshold = float(np.percentile(scores, 99))
 
@@ -231,7 +238,9 @@ def main() -> None:
 
         prediction_runs: list[PredictionRun] = []
         alerts: list[Alert] = []
-        for start, end, score, contributions in zip(window_starts, window_ends, scores, contributions_list):
+        for start, end, score, contributions in zip(
+            window_starts, window_ends, scores, contributions_list, strict=True
+        ):
             health_index = 100 * max(0.0, min(1.0, 1 - float(score) / health_scale))
             state = "alert" if score >= threshold else ("attention" if score >= 0.7 * threshold else "normal")
             pr_id = uuid.uuid4()

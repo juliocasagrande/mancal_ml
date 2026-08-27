@@ -21,7 +21,7 @@ def lstm_feature_contribution(
         share = np.zeros_like(per_channel_error)
     else:
         share = per_channel_error / total
-    return dict(zip(feature_names, share.tolist()))
+    return dict(zip(feature_names, share.tolist(), strict=True))
 
 
 def baseline_feature_contribution(
@@ -35,4 +35,4 @@ def baseline_feature_contribution(
     z = np.nan_to_num(z, nan=0.0)
     total = z.sum()
     share = z / total if total > 0 else np.zeros_like(z)
-    return dict(zip(feature_names, share.tolist()))
+    return dict(zip(feature_names, share.tolist(), strict=True))

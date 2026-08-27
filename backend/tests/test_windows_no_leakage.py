@@ -47,7 +47,7 @@ def test_window_split_label_matches_its_source_file() -> None:
 
     windows = make_windows(df, FEATURE_COLUMNS, window_size=3, stride=1)
 
-    for source, split in zip(windows.source_file, windows.split):
+    for source, split in zip(windows.source_file, windows.split, strict=True):
         expected_split = "train" if source == "A.csv" else "test"
         assert split == expected_split
 

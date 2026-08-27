@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from app.features.splits import SPLIT_FILES, TEST_FILES, TRAIN_FILES, VALIDATION_FILES, assign_split, file_to_split
+from app.features.splits import TEST_FILES, TRAIN_FILES, VALIDATION_FILES, assign_split, file_to_split
 
 
 def test_split_files_are_mutually_exclusive() -> None:

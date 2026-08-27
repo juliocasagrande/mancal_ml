@@ -26,7 +26,7 @@ def _normalize(values: dict[str, float], lower_is_better: bool) -> dict[str, flo
     normalized = (arr - arr.min()) / (arr.max() - arr.min())
     if lower_is_better:
         normalized = 1.0 - normalized
-    return dict(zip(values.keys(), normalized.tolist()))
+    return dict(zip(values.keys(), normalized.tolist(), strict=True))
 
 
 def compute_decision_matrix(

@@ -74,3 +74,46 @@ describe('OverviewPage', () => {
     })
   })
 })
+
+describe('OverviewPage — model unavailable', () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = typeof input === 'string' ? input : input.toString()
+        if (url.includes('/api/monitoring/current')) {
+          return jsonResponse({ state: 'model_unavailable', message: 'Nenhum modelo ativo configurado' })
+        }
+        if (url.includes('/api/alerts')) {
+          return jsonResponse([])
+        }
+        return jsonResponse([])
+      }),
+    )
+  })
+
+  it('shows the model_unavailable domain state instead of the health gauge', async () => {
+    renderWithProviders(<OverviewPage />)
+
+    await waitFor(() =>
+      expect(screen.getByText(/nenhum modelo ativo configurado/i)).toBeInTheDocument(),
+    )
+    expect(screen.queryByText('Score de anomalia')).not.toBeInTheDocument()
+  })
+})
+
+describe('OverviewPage — banco/API indisponível', () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ detail: 'Erro interno do servidor' }), { status: 500 })),
+    )
+  })
+
+  it('shows an error state with retry instead of crashing when the API/DB is down', async () => {
+    renderWithProviders(<OverviewPage />)
+
+    await waitFor(() => expect(screen.getAllByRole('alert').length).toBeGreaterThan(0))
+    expect(screen.getAllByRole('button', { name: /tentar novamente/i }).length).toBeGreaterThan(0)
+  })
+})

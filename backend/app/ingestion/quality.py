@@ -9,7 +9,7 @@ regras aplicadas e versão do código.
 import json
 import subprocess
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from app.ingestion.loader import LoadReport
@@ -46,7 +46,7 @@ def build_ingestion_run_report(
         "dataset_version": dataset_version,
         "pipeline_version": pipeline_version,
         "git_commit": _git_commit(),
-        "run_started_at": datetime.now(timezone.utc).isoformat(),
+        "run_started_at": datetime.now(UTC).isoformat(),
         "row_count": total_rows,
         "time_start": str(time_start) if time_start is not None else None,
         "time_end": str(time_end) if time_end is not None else None,

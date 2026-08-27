@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
@@ -42,7 +42,7 @@ def update_alert(alert_id: str, payload: dict = Body(...), db: Session = Depends
 
     if "acknowledged" in payload:
         alert.acknowledged = bool(payload["acknowledged"])
-        alert.acknowledged_at = datetime.now(timezone.utc) if alert.acknowledged else None
+        alert.acknowledged_at = datetime.now(UTC) if alert.acknowledged else None
     if "notes" in payload:
         alert.notes = str(payload["notes"])[:2000]
 

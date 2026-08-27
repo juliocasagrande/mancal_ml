@@ -18,12 +18,11 @@ import pandas as pd
 
 from app.features.engineering import FEATURE_SET_VERSION, compute_window_features
 from app.features.scaling import fit_scaler, save_scaler
-from app.features.splits import assign_split
+from app.features.splits import TEST_FILES, TRAIN_FILES, VALIDATION_FILES, assign_split
 from app.features.windows import make_windows
 from app.ingestion.loader import load_raw_g1_file
 from app.ingestion.quality import build_ingestion_run_report, save_report
 from app.ingestion.schema import MODELING_COLUMNS
-from app.features.splits import TRAIN_FILES, VALIDATION_FILES, TEST_FILES
 
 ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = ROOT / "data" / "raw"
@@ -96,7 +95,10 @@ def main() -> None:
 
     assert scaler is not None and train_features is not None
     save_scaler(scaler, ARTIFACT_DIR / "scaler_v1.joblib")
-    print(f"Scaler ajustado apenas no treino ({train_features.shape[0]} janelas) e salvo em artifacts/scaler_v1.joblib")
+    print(
+        f"Scaler ajustado apenas no treino ({train_features.shape[0]} janelas) e salvo em "
+        "artifacts/scaler_v1.joblib"
+    )
 
 
 if __name__ == "__main__":

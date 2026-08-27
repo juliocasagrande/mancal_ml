@@ -8,11 +8,12 @@ from datetime import datetime, timedelta
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.db.base import Base
-from app.db.models import Alert, Dataset, ModelVersion, PredictionRun
+from app.db.models import Alert, ModelVersion, PredictionRun
 from app.db.session import get_db
 from app.main import app
 
@@ -184,3 +185,22 @@ def test_signals_range_rejects_end_before_start(client) -> None:
 def test_evaluations_run_endpoint_is_not_implemented(client) -> None:
     response = client.post("/api/evaluations/run")
     assert response.status_code == 501
+
+
+def test_db_unavailable_returns_500_without_stack_trace() -> None:
+    """Seção 17 do blueprint: falha segura e sem stack trace quando o banco está indisponível."""
+
+    def override_get_db():
+        raise OperationalError("connect", {}, Exception("could not connect to server"))
+        yield  # pragma: no cover - torna a função um generator, nunca alcançado
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        response = TestClient(app, raise_server_exceptions=False).get("/api/datasets")
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 500
+    body = response.json()
+    assert body == {"detail": "Erro interno do servidor"}
+    assert "Traceback" not in response.text

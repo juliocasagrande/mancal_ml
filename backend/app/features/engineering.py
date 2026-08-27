@@ -26,7 +26,7 @@ def compute_window_features(values: np.ndarray, feature_columns: list[str]) -> t
 
     derived = np.concatenate([mean, std, rms, peak_to_peak, skewness, kurtosis], axis=1)
 
-    names = []
+    names: list[str] = []
     for stat_name in ("mean", "std", "rms", "peak_to_peak", "skewness", "kurtosis"):
         names.extend(f"{col}__{stat_name}" for col in feature_columns)
 

@@ -67,9 +67,15 @@ def compute_score_curves(scores: np.ndarray, labels: np.ndarray, n_bins: int = 2
             for i in idx
         ]
 
-    bin_edges = np.linspace(float(scores.min()), float(scores.max()), n_bins + 1) if len(scores) else np.array([0.0, 1.0])
-    healthy_counts, _ = np.histogram(scores[~labels], bins=bin_edges) if (~labels).any() else (np.zeros(n_bins, dtype=int), None)
-    anomalous_counts, _ = np.histogram(scores[labels], bins=bin_edges) if labels.any() else (np.zeros(n_bins, dtype=int), None)
+    bin_edges = (
+        np.linspace(float(scores.min()), float(scores.max()), n_bins + 1) if len(scores) else np.array([0.0, 1.0])
+    )
+    healthy_counts, _ = (
+        np.histogram(scores[~labels], bins=bin_edges) if (~labels).any() else (np.zeros(n_bins, dtype=int), None)
+    )
+    anomalous_counts, _ = (
+        np.histogram(scores[labels], bins=bin_edges) if labels.any() else (np.zeros(n_bins, dtype=int), None)
+    )
 
     return {
         "pr_curve": pr_curve,

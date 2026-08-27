@@ -1,7 +1,8 @@
 """Inferência da LSTM Autoencoder em processo separado do treino.
 
 Uso:
-    .\\.venv\\Scripts\\python.exe backend\\scripts\\score_lstm.py --artifacts-dir artifacts\\lstm_autoencoder_v1 --npz data\\processed\\windows_test.npz
+    .\\.venv\\Scripts\\python.exe backend\\scripts\\score_lstm.py \\
+        --artifacts-dir artifacts\\lstm_autoencoder_v1 --npz data\\processed\\windows_test.npz
 
 Imprime uma linha JSON com a lista de scores de erro de reconstrução —
 usado tanto para inferência real quanto pelo teste de reprodutibilidade

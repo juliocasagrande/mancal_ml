@@ -56,10 +56,16 @@ def signal_range(
 def signal_summary(db: Session = Depends(get_db)) -> dict:
     total = db.query(func.count(SignalSample.id)).scalar()
     time_range = db.query(func.min(SignalSample.timestamp), func.max(SignalSample.timestamp)).first()
-    by_split = dict(db.query(SignalSample.split, func.count(SignalSample.id)).group_by(SignalSample.split).all())
-    by_file = dict(
-        db.query(SignalSample.source_file, func.count(SignalSample.id)).group_by(SignalSample.source_file).all()
-    )
+    by_split: dict[str, int] = {
+        split: count
+        for split, count in db.query(SignalSample.split, func.count(SignalSample.id)).group_by(SignalSample.split)
+    }
+    by_file: dict[str, int] = {
+        source_file: count
+        for source_file, count in db.query(SignalSample.source_file, func.count(SignalSample.id)).group_by(
+            SignalSample.source_file
+        )
+    }
     return {
         "total_samples": total,
         "time_start": time_range[0] if time_range else None,
