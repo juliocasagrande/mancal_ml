@@ -7,6 +7,7 @@ from sklearn.metrics import (
     average_precision_score,
     confusion_matrix,
     f1_score,
+    precision_recall_curve,
     precision_score,
     recall_score,
     roc_auc_score,
@@ -43,6 +44,41 @@ def compute_window_metrics(scores: np.ndarray, labels: np.ndarray, threshold: fl
         roc_auc=roc_auc,
         confusion_matrix=confusion_matrix(labels, predictions, labels=[False, True]).tolist(),
     )
+
+
+def compute_score_curves(scores: np.ndarray, labels: np.ndarray, n_bins: int = 25) -> dict:
+    """Curva precision-recall e histograma de score saudável x anômalo —
+    Página 3 do frontend (Marco 7). Downsample da curva PR para manter o
+    payload pequeno; o histograma usa os mesmos bins para as duas
+    populações para permitir sobrepor as barras na interface.
+    """
+    labels = labels.astype(bool)
+
+    if labels.sum() == 0 or labels.sum() == len(labels):
+        pr_curve: list[dict] = []
+    else:
+        precision, recall, thresholds = precision_recall_curve(labels, scores)
+        # precision_recall_curve devolve len(thresholds) == len(precision) - 1
+        thresholds = np.append(thresholds, thresholds[-1] if len(thresholds) else 0.0)
+        max_points = 50
+        idx = np.linspace(0, len(precision) - 1, num=min(max_points, len(precision)), dtype=int)
+        pr_curve = [
+            {"precision": float(precision[i]), "recall": float(recall[i]), "threshold": float(thresholds[i])}
+            for i in idx
+        ]
+
+    bin_edges = np.linspace(float(scores.min()), float(scores.max()), n_bins + 1) if len(scores) else np.array([0.0, 1.0])
+    healthy_counts, _ = np.histogram(scores[~labels], bins=bin_edges) if (~labels).any() else (np.zeros(n_bins, dtype=int), None)
+    anomalous_counts, _ = np.histogram(scores[labels], bins=bin_edges) if labels.any() else (np.zeros(n_bins, dtype=int), None)
+
+    return {
+        "pr_curve": pr_curve,
+        "score_histogram": {
+            "bin_edges": bin_edges.tolist(),
+            "healthy": healthy_counts.tolist(),
+            "anomalous": anomalous_counts.tolist(),
+        },
+    }
 
 
 def detection_delay_windows(predictions: np.ndarray, labels: np.ndarray) -> float:

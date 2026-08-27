@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 
 from app.evaluation.labels import build_proxy_labels
-from app.evaluation.metrics import compute_event_metrics, compute_window_metrics
+from app.evaluation.metrics import compute_event_metrics, compute_score_curves, compute_window_metrics
 from app.inference.lstm_inference import load_artifacts, score_windows
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -37,6 +37,7 @@ def main() -> None:
 
     window_metrics = compute_window_metrics(scores, labels, threshold)
     event_metrics = compute_event_metrics(predictions, labels, STRIDE_HOURS)
+    curves = compute_score_curves(scores, labels)
 
     print("=== lstm_autoencoder ===")
     print(f"limiar (validação, percentil {config['threshold_percentile']}): {threshold:.4f}")
@@ -54,6 +55,7 @@ def main() -> None:
         "config": config,
         "window_metrics": vars(window_metrics),
         "event_metrics": vars(event_metrics),
+        "curves": curves,
     }
     out_path = ROOT / "data" / "interim" / "evaluation_report_lstm.json"
     out_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")

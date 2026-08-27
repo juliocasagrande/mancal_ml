@@ -28,10 +28,12 @@ def current_state(db: Session = Depends(get_db)) -> dict:
         "state": latest.state,
         "health_index": latest.health_index,
         "anomaly_score": latest.anomaly_score,
+        "threshold": active_model.hyperparameters.get("threshold"),
         "window_start": latest.window_start,
         "window_end": latest.window_end,
         "model_name": active_model.name,
         "model_id": str(active_model.id),
+        "feature_contributions": latest.feature_contributions,
     }
 
 
@@ -58,6 +60,7 @@ def timeline(
         rows = list(reversed(rows))
     return {
         "model_name": active_model.name,
+        "threshold": active_model.hyperparameters.get("threshold"),
         "points": [
             {
                 "window_start": r.window_start,
@@ -65,6 +68,7 @@ def timeline(
                 "anomaly_score": r.anomaly_score,
                 "health_index": r.health_index,
                 "state": r.state,
+                "feature_contributions": r.feature_contributions,
             }
             for r in rows
         ],

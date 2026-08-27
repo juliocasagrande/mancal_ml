@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 
 from app.evaluation.labels import build_proxy_labels
-from app.evaluation.metrics import compute_event_metrics, compute_window_metrics
+from app.evaluation.metrics import compute_event_metrics, compute_score_curves, compute_window_metrics
 from app.features.cleaning import sanitize_features
 from app.models.baseline import RobustZScoreBaseline
 from app.models.isolation_forest_model import IsolationForestModel
@@ -74,11 +74,13 @@ def main() -> None:
 
         window_metrics = compute_window_metrics(test_scores, test_labels, threshold)
         event_metrics = compute_event_metrics(predictions, test_labels, STRIDE_HOURS)
+        curves = compute_score_curves(test_scores, test_labels)
 
         report["models"][name] = {
             "threshold": threshold,
             "window_metrics": vars(window_metrics),
             "event_metrics": vars(event_metrics),
+            "curves": curves,
         }
         print(f"\n=== {name} ===")
         print(f"limiar (percentil {VALIDATION_PERCENTILE} da validação): {threshold:.4f}")

@@ -12,14 +12,17 @@ Uso:
 
 import json
 import subprocess
+import uuid
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import torch
 
 from app.db.models import Alert, Dataset, EvaluationRun, IngestionRun, ModelVersion, PredictionRun, SignalSample
 from app.db.session import get_session_factory
-from app.ingestion.schema import VALUE_COLUMNS
+from app.evaluation.explainability import baseline_feature_contribution, lstm_feature_contribution
+from app.ingestion.schema import MODELING_COLUMNS, VALUE_COLUMNS
 from app.inference.lstm_inference import load_artifacts, score_windows
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -104,13 +107,14 @@ def main() -> None:
             ("baseline_zscore", baselines_report["models"]["baseline_zscore"]),
             ("isolation_forest", baselines_report["models"]["isolation_forest"]),
         ):
+            metrics_with_curves = {**report["window_metrics"], "curves": report["curves"]}
             mv = ModelVersion(
                 name=name,
                 algorithm=name,
                 artifact_path="(recalculado em runtime, não persistido em artifacts/)",
                 dataset_version=DATASET_DOI,
-                hyperparameters={},
-                metrics=report["window_metrics"],
+                hyperparameters={"threshold": report["threshold"]},
+                metrics=metrics_with_curves,
                 status="active" if name == champion_name else "candidate",
                 git_commit=_git_commit(),
             )
@@ -121,20 +125,24 @@ def main() -> None:
                 EvaluationRun(
                     model_version_id=mv.id,
                     configuration={"threshold": report["threshold"]},
-                    metrics=report["window_metrics"],
+                    metrics=metrics_with_curves,
                     confusion_matrix={"matrix": report["window_metrics"]["confusion_matrix"]},
                 )
             )
 
         lstm_config = lstm_eval_report["config"]
+        lstm_metrics_with_curves = {**lstm_eval_report["window_metrics"], "curves": lstm_eval_report["curves"]}
         mv_lstm = ModelVersion(
             name="lstm_autoencoder",
             algorithm="lstm_autoencoder",
             artifact_path=str((ARTIFACTS_DIR / "lstm_autoencoder_v1").relative_to(ROOT)),
             dataset_version=DATASET_DOI,
             feature_schema={"n_features": lstm_config["n_features"], "window_size": lstm_config["window_size"]},
-            hyperparameters={k: lstm_config[k] for k in ("hidden_size", "latent_size", "learning_rate", "seed")},
-            metrics=lstm_eval_report["window_metrics"],
+            hyperparameters={
+                **{k: lstm_config[k] for k in ("hidden_size", "latent_size", "learning_rate", "seed")},
+                "threshold": lstm_config["threshold"],
+            },
+            metrics=lstm_metrics_with_curves,
             status="active" if champion_name == "lstm_autoencoder" else "candidate",
             git_commit=_git_commit(),
         )
@@ -145,10 +153,17 @@ def main() -> None:
             EvaluationRun(
                 model_version_id=mv_lstm.id,
                 configuration={"threshold": lstm_config["threshold"]},
-                metrics=lstm_eval_report["window_metrics"],
+                metrics=lstm_metrics_with_curves,
                 confusion_matrix={"matrix": lstm_eval_report["window_metrics"]["confusion_matrix"]},
             )
         )
+
+        # Checkpoint: dataset, ingestão, sinal e modelos já persistidos.
+        # Commitar aqui evita perder esse trabalho se o lote grande de
+        # previsões abaixo falhar por instabilidade do proxy TCP do Railway
+        # (já aconteceu — ver docs/decisoes/0005-interface-react-marco7.md).
+        db.commit()
+        print("Dataset, sinal e modelos persistidos")
 
         # Amostra de previsões/alertas para demonstração: usa o modelo campeão
         # sobre o split de teste (Página 1/2 do frontend precisam de dados).
@@ -157,10 +172,28 @@ def main() -> None:
         window_starts = pd.to_datetime(test_windows_npz["window_start"])
         window_ends = pd.to_datetime(test_windows_npz["window_end"])
 
+        # feature_contributions por janela — Seção 11 do blueprint / Página 4
+        # do frontend (Marco 7). Só implementado onde
+        # app/evaluation/explainability.py oferece uma decomposição nativa:
+        # LSTM (erro de reconstrução por canal) e baseline z-score (|z| por
+        # atributo). Isolation Forest não decompõe nativamente por variável
+        # (ver docs/resultados.md) — fica com {} nesse caso.
+        contributions_list: list[dict[str, float]] = []
+
         if champion_name == "lstm_autoencoder":
             model, scaler, config = load_artifacts(ARTIFACTS_DIR / "lstm_autoencoder_v1")
-            scores = score_windows(model, scaler, test_windows_npz["values"])
+            raw_windows = test_windows_npz["values"]
+            scores = score_windows(model, scaler, raw_windows)
             threshold = config["threshold"]
+
+            n, window_size, n_features = raw_windows.shape
+            flat = raw_windows.reshape(n * window_size, n_features)
+            scaled_windows = scaler.transform(flat).reshape(n, window_size, n_features)
+            with torch.no_grad():
+                reconstructed = model(torch.tensor(scaled_windows, dtype=torch.float32)).numpy()
+            contributions_list = [
+                lstm_feature_contribution(scaled_windows[i], reconstructed[i], MODELING_COLUMNS) for i in range(n)
+            ]
         else:
             test_features_df = pd.read_csv(PROCESSED_DIR / "features_test.csv")
             from app.features.cleaning import sanitize_features
@@ -169,31 +202,55 @@ def main() -> None:
 
             train_features_df = pd.read_csv(PROCESSED_DIR / "features_train.csv")
             metadata_cols = ["source_file", "window_start", "window_end"]
+            feature_names = [c for c in test_features_df.columns if c not in metadata_cols]
             x_train = sanitize_features(train_features_df.drop(columns=metadata_cols).to_numpy(dtype=float))
             x_test = sanitize_features(test_features_df.drop(columns=metadata_cols).to_numpy(dtype=float))
             model = RobustZScoreBaseline().fit(x_train) if champion_name == "baseline_zscore" else IsolationForestModel().fit(x_train)
             scores = model.score(x_test)
             threshold = float(np.percentile(scores, 99))
 
-        max_score = float(np.max(scores)) if len(scores) else 1.0
-        for start, end, score in zip(window_starts, window_ends, scores):
-            health_index = 100 * max(0.0, min(1.0, 1 - float(score) / max_score))
+            if champion_name == "baseline_zscore":
+                contributions_list = [
+                    baseline_feature_contribution(x_test[i], model.median_, model.mad_, feature_names)
+                    for i in range(len(x_test))
+                ]
+            else:
+                contributions_list = [{} for _ in range(len(x_test))]
+
+        champion_model_version_id = champion_mv.id
+
+        # health_index normalizado pelo limiar (Seção 11 do blueprint: "a
+        # normalização deve ser calibrada na validação e documentada"), não
+        # pelo máximo do split de teste — normalizar pelo máximo comprimia
+        # scores já acima do limiar para perto de 100 (verde) sempre que
+        # existisse um outlier bem maior em outro ponto do teste, mostrando
+        # "Alerta" ao lado de um índice de saúde alto. Score == limiar ⇒
+        # health_index = 50; score >= 2×limiar ⇒ health_index = 0 (mesma
+        # escala usada para decidir o estado normal/attention/alert abaixo).
+        health_scale = 2 * threshold if threshold > 0 else 1.0
+
+        prediction_runs: list[PredictionRun] = []
+        alerts: list[Alert] = []
+        for start, end, score, contributions in zip(window_starts, window_ends, scores, contributions_list):
+            health_index = 100 * max(0.0, min(1.0, 1 - float(score) / health_scale))
             state = "alert" if score >= threshold else ("attention" if score >= 0.7 * threshold else "normal")
-            pr = PredictionRun(
-                model_version_id=champion_mv.id,
-                window_start=start,
-                window_end=end,
-                anomaly_score=float(score),
-                health_index=health_index,
-                state=state,
-                feature_contributions={},
+            pr_id = uuid.uuid4()
+            prediction_runs.append(
+                PredictionRun(
+                    id=pr_id,
+                    model_version_id=champion_model_version_id,
+                    window_start=start,
+                    window_end=end,
+                    anomaly_score=float(score),
+                    health_index=health_index,
+                    state=state,
+                    feature_contributions=contributions,
+                )
             )
-            db.add(pr)
             if state == "alert":
-                db.flush()
-                db.add(
+                alerts.append(
                     Alert(
-                        prediction_run_id=pr.id,
+                        prediction_run_id=pr_id,
                         severity="alert",
                         reason=(
                             "Score de anomalia acima do limiar calibrado na validação. "
@@ -202,9 +259,21 @@ def main() -> None:
                     )
                 )
 
-        db.commit()
+        # Insere em lotes pequenos, com commit a cada lote: uma única
+        # transação gigante sobre o proxy TCP do Railway se mostrou instável
+        # (conexão derrubada a meio caminho). IDs gerados em Python (acima)
+        # permitem popular prediction_run_id dos alertas sem depender de
+        # round-trip de flush por linha.
+        BATCH_SIZE = 200
+        for i in range(0, len(prediction_runs), BATCH_SIZE):
+            db.bulk_save_objects(prediction_runs[i : i + BATCH_SIZE])
+            db.commit()
+        for i in range(0, len(alerts), BATCH_SIZE):
+            db.bulk_save_objects(alerts[i : i + BATCH_SIZE])
+            db.commit()
+
         print(f"Modelo campeão marcado como ativo: {champion_name}")
-        print(f"{len(window_starts)} previsões e alertas de demonstração inseridos")
+        print(f"{len(prediction_runs)} previsões e {len(alerts)} alertas de demonstração inseridos")
 
 
 if __name__ == "__main__":
