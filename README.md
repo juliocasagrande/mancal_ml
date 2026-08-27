@@ -5,9 +5,10 @@
 > turbina hidráulica, com avaliação temporal, índice de saúde e
 > explicabilidade operacional.
 
-**Status:** em construção — Marcos 0 a 2 concluídos (repositório,
-auditoria do dataset e pipeline temporal). Este README será reescrito com
-resultados, screenshots e arquitetura ao final (ver `docs/decisoes/`).
+**Status:** em construção — Marcos 0 a 3 concluídos (repositório,
+auditoria do dataset, pipeline temporal e baselines). Primeiros resultados
+em `docs/resultados.md`. Este README será reescrito com resultados,
+screenshots e arquitetura ao final (ver `docs/decisoes/`).
 
 O sistema é um apoio à decisão. Não emite comandos para equipamentos nem se
 apresenta como solução certificada para operação real.
@@ -50,6 +51,14 @@ Gera `data/interim/g1_clean.csv`, `data/interim/ingestion_report.json`,
 janelas e atributos por split em `data/processed/` e o scaler treinado em
 `artifacts/scaler_v1.joblib`. Ver `docs/formulacao-do-problema.md` para a
 definição do split temporal e a tarefa de ML escolhida.
+
+```powershell
+.\.venv\Scripts\python.exe backend\scripts\run_baselines.py
+```
+
+Compara baseline estatístico e Isolation Forest e grava
+`data/interim/evaluation_report_marco3.json`. Resultados discutidos em
+`docs/resultados.md`.
 
 ## Testes
 
