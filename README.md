@@ -5,9 +5,9 @@
 > turbina hidráulica, com avaliação temporal, índice de saúde e
 > explicabilidade operacional.
 
-**Status:** em construção — Marco 0 (repositório) e Marco 1 (dataset e
-qualidade) em andamento. Este README será reescrito com resultados,
-screenshots e arquitetura ao final (ver `docs/decisoes/`).
+**Status:** em construção — Marcos 0 a 2 concluídos (repositório,
+auditoria do dataset e pipeline temporal). Este README será reescrito com
+resultados, screenshots e arquitetura ao final (ver `docs/decisoes/`).
 
 O sistema é um apoio à decisão. Não emite comandos para equipamentos nem se
 apresenta como solução certificada para operação real.
@@ -36,6 +36,26 @@ python -m venv .venv
 ```powershell
 cd frontend
 npm install
+```
+
+## Pipeline de dados (Marco 1 e 2)
+
+```powershell
+.\.venv\Scripts\python.exe backend\scripts\download_dataset.py
+.\.venv\Scripts\python.exe backend\scripts\audit_dataset.py
+.\.venv\Scripts\python.exe backend\scripts\build_dataset.py
+```
+
+Gera `data/interim/g1_clean.csv`, `data/interim/ingestion_report.json`,
+janelas e atributos por split em `data/processed/` e o scaler treinado em
+`artifacts/scaler_v1.joblib`. Ver `docs/formulacao-do-problema.md` para a
+definição do split temporal e a tarefa de ML escolhida.
+
+## Testes
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest backend\tests -q
+cd frontend; npm run test
 ```
 
 ## Estrutura do repositório
