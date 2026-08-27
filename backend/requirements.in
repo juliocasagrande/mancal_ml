@@ -11,6 +11,8 @@ psycopg[binary]
 alembic
 joblib
 httpx
+torch
+pyyaml
 pytest
 ruff
 mypy

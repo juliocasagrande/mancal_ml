@@ -1,14 +1,18 @@
-# Resultados — primeiro relatório (Marco 3)
+# Resultados
 
-Comparação entre um baseline estatístico e Isolation Forest, antes de
-qualquer rede neural, conforme exige a Seção 15 (Marco 3) do blueprint:
-"existe uma referência quantitativa antes da rede neural."
+Comparação entre um baseline estatístico, Isolation Forest e uma LSTM
+Autoencoder, no mesmo protocolo de split/janela/limiar. A ordem de
+implementação seguiu a Seção 15 do blueprint: baselines antes da rede
+neural (Marco 3), rede neural depois (Marco 4) — "existe uma referência
+quantitativa antes da rede neural."
 
 Reprodução:
 
 ```powershell
 .\.venv\Scripts\python.exe backend\scripts\build_dataset.py
 .\.venv\Scripts\python.exe backend\scripts\run_baselines.py
+.\.venv\Scripts\python.exe backend\scripts\train_lstm.py
+.\.venv\Scripts\python.exe backend\scripts\run_lstm_evaluation.py
 ```
 
 ## Aviso obrigatório sobre o rótulo usado
@@ -38,8 +42,9 @@ uma falha real.
 
 | Modelo | Descrição |
 |---|---|
-| `baseline_zscore` | z-score robusto (mediana/MAD) por atributo, ajustado só no treino; score = maior \|z\| entre atributos (atributos quase constantes no treino são excluídos do cálculo, não geram score espúrio) |
-| `isolation_forest` | `sklearn.ensemble.IsolationForest`, 200 árvores, `random_state=42`, ajustado só no treino |
+| `baseline_zscore` | z-score robusto (mediana/MAD) por atributo derivado, ajustado só no treino; score = maior \|z\| entre atributos (atributos quase constantes no treino são excluídos do cálculo, não geram score espúrio) |
+| `isolation_forest` | `sklearn.ensemble.IsolationForest`, 200 árvores, `random_state=42`, ajustado só no treino, sobre os mesmos atributos derivados |
+| `lstm_autoencoder` | encoder/decoder LSTM (1 camada, hidden=16, latente=8), 4.499 parâmetros, treinado só com janelas saudáveis (sinal bruto normalizado, não os atributos derivados); score = erro de reconstrução (MSE) por janela; early stopping (paciência 5), 32 épocas, ~35s em CPU |
 
 ## Resultados (split de teste, contra o rótulo-proxy)
 
@@ -47,10 +52,13 @@ uma falha real.
 |---|---:|---:|---:|---:|---:|---:|---:|
 | `baseline_zscore` | 0,954 | 1,000 | 0,976 | 1,000 | 1/1 (100%) | 6 | 0,07 |
 | `isolation_forest` | 0,839 | 1,000 | 0,913 | 0,926 | 1/1 (100%) | 25 | 0,30 |
+| `lstm_autoencoder` | 0,457 | 1,000 | 0,627 | 0,999 | 1/1 (100%) | 7 | 0,08 |
 
-(Valores completos, incluindo matriz de confusão por janela, em
-`data/interim/evaluation_report_marco3.json`, gerado a cada execução do
-script — não versionado no Git.)
+(Valores completos, incluindo matriz de confusão por janela e a
+configuração de treino da LSTM, em
+`data/interim/evaluation_report_marco3.json` e
+`data/interim/evaluation_report_lstm.json`, gerados a cada execução dos
+scripts — não versionados no Git.)
 
 ## Leitura dos resultados
 
@@ -75,12 +83,35 @@ script — não versionado no Git.)
   implementação, não uma limitação real do método. Ver
   `docs/decisoes/` e o histórico de commits.
 
-## Próximos passos (Marco 4/5)
+## Leitura dos resultados da LSTM
 
-- Introduzir a LSTM Autoencoder e comparar contra estes dois baselines
-  usando o mesmo protocolo de split/limiar.
+- A LSTM tem **PR-AUC quase idêntico ao do baseline (0,999 vs. 1,000)** —
+  como *ranking* de anomalia, ela separa bem o evento-proxy do resto do
+  teste, mesmo aprendendo diretamente do sinal bruto (sem os atributos
+  estatísticos manuais que o baseline e o Isolation Forest usam.
+- No **limiar operacional escolhido** (percentil 99 da validação), a
+  LSTM tem precisão bem mais baixa (0,457) que o baseline (0,954) — ela
+  sinaliza mais janelas "normais" como anômalas nesse ponto de corte
+  específico. Isso é uma questão de calibração de limiar, não de
+  capacidade de separação (o PR-AUC mostra que a informação está lá).
+- **Neste dataset e com este proxy, o baseline estatístico simples
+  continua sendo o mais competitivo em métricas operacionais**
+  (precisão e falso-alarmes/dia), apesar de a LSTM ter capacidade de
+  ranking equivalente. Isso ilustra exatamente o ponto da Seção 9.4 do
+  blueprint: a rede neural não é escolhida por padrão — precisa provar
+  vantagem operacional, e neste recorte específico (poucos meses, um
+  único evento-proxy fácil de separar por potência) ela ainda não supera
+  o baseline. A escolha final do campeão, com a matriz de decisão
+  completa, fica para o Marco 5.
+
+## Próximos passos (Marco 5)
+
+- Aplicar a matriz de decisão ponderada da Seção 9.4 do blueprint aos
+  três modelos e declarar o campeão de forma explícita e justificada.
 - Testar mais de uma dimensão de janela e mais de um limiar (Seção 10 do
-  blueprint) antes de declarar um "campeão".
+  blueprint) antes de finalizar a escolha.
+- Implementar explicabilidade (contribuição por variável/tempo na
+  reconstrução da LSTM) para a Página 4 do frontend.
 - Revisar o rótulo-proxy com mais cuidado — por exemplo, cruzando com a
   coluna `unit_speed_pct` para diferenciar "unidade parada" de "unidade
   operando com vibração anômala", que são fisicamente muito diferentes.

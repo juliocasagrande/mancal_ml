@@ -1,0 +1,8 @@
+hidden_size: 16
+latent_size: 8
+learning_rate: 0.001
+batch_size: 64
+max_epochs: 50
+patience: 5
+seed: 42
+threshold_percentile: 99

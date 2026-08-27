@@ -21,3 +21,8 @@ compatível com Python 3.14 no Windows. Se não houver, instalar Python
 `python.org` no modo "Install for me only" ou via `py` launcher) e criar
 um `.venv` dedicado ao backend com essa versão, sem alterar o Python
 usado pelo restante do sistema do usuário.
+
+**Atualização (Marco 4):** há wheel oficial `torch==2.13.0+cpu` para
+`cp314-win_amd64` em `download.pytorch.org/whl/cpu`. Não foi necessário
+trocar de versão do Python. A instalação exigiu, porém, um contorno
+por causa do caminho longo do projeto (OneDrive) — ver ADR 0003.
