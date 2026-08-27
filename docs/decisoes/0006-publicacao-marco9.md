@@ -43,6 +43,19 @@ Railway desde o Marco 6 — ver `docs/decisoes/0004-railway-postgres-e-api.md`
 - **`CORS_ORIGINS`** do backend inclui o domínio publicado do Vercel além
   de `localhost:5173`, para a demonstração pública funcionar sem abrir
   CORS para qualquer origem.
+- **Deploy do frontend é manual (`vercel deploy --prod`), não automático
+  a cada push.** O primeiro `vercel deploy` rodado de dentro de
+  `frontend/` criou o projeto com "Root Directory" = `.` (raiz do
+  monorepo) em vez de `frontend` — o deploy automático via GitHub então
+  clona o repo inteiro e falha (`vite: command not found`, porque
+  `npm install` nunca roda dentro de `frontend/`). A CLI não expõe um
+  comando para corrigir o Root Directory do projeto (só o dashboard
+  web); em vez de editar isso manualmente no dashboard, a integração
+  Git foi desconectada (`vercel git disconnect`) e o processo de
+  publicação passou a ser `cd frontend && npx vercel deploy --prod`
+  depois de cada mudança relevante. O domínio de produção
+  (`frontend-zeta-ten-m6tiwls3qo.vercel.app`) é um alias estável do
+  projeto — não muda a cada deploy manual.
 - **Bug corrigido durante este marco**: o badge de estado no cabeçalho
   (`AppShell.tsx`) estava fixo em `state="normal"`, independente do
   estado real (`useMonitoringCurrent`) mostrado no restante da página —
