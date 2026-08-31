@@ -1,31 +1,43 @@
 :root {
-  --color-bg: #050b14;
-  --color-bg-raised: #0a1626;
-  --color-bg-card: #0e1d31;
-  --color-border: #1c3049;
-  --color-border-strong: #2a476b;
+  --color-bg: oklch(0.985 0.003 90);
+  --color-bg-card: oklch(1 0 0);
+  --color-bg-raised: oklch(0.97 0.004 90);
+  --color-border: oklch(0.9 0.006 90);
+  --color-border-strong: oklch(0.82 0.008 90);
 
-  --color-text: #e7eef7;
-  --color-text-muted: #94a7c0;
-  --color-text-faint: #5f7591;
+  --color-text: oklch(0.27 0.012 262);
+  --color-text-muted: oklch(0.5 0.008 262);
+  --color-text-faint: oklch(0.68 0.008 262);
 
-  --color-accent: #22d3ee;
-  --color-accent-strong: #67e8f9;
-  --color-accent-bg: rgba(34, 211, 238, 0.12);
+  --color-accent: oklch(0.36 0.045 255);
+  --color-accent-strong: oklch(0.28 0.05 255);
+  --color-accent-bg: oklch(0.94 0.02 255);
+  --color-accent-text: oklch(0.32 0.08 255);
 
-  --color-normal: #34d399;
-  --color-attention: #fbbf24;
-  --color-alert: #f87171;
-  --color-neutral: #a78bfa;
+  --color-normal: oklch(0.64 0.13 145);
+  --color-attention: oklch(0.72 0.15 70);
+  --color-alert: oklch(0.58 0.17 25);
+  --color-neutral: oklch(0.55 0.09 300);
 
-  --color-focus-ring: #67e8f9;
+  --color-normal-bg: oklch(0.95 0.03 145);
+  --color-normal-fg: oklch(0.36 0.09 145);
+  --color-attention-bg: oklch(0.96 0.03 70);
+  --color-attention-fg: oklch(0.42 0.1 70);
+  --color-alert-bg: oklch(0.95 0.035 25);
+  --color-alert-fg: oklch(0.45 0.13 25);
+  --color-neutral-bg: oklch(0.95 0.025 300);
+  --color-neutral-fg: oklch(0.4 0.09 300);
 
-  --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --font-mono: 'Cascadia Code', 'Consolas', ui-monospace, monospace;
+  --color-gauge-track: oklch(0.92 0.006 90);
 
-  --radius-sm: 4px;
+  --color-focus-ring: oklch(0.36 0.045 255);
+
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+
+  --radius-sm: 5px;
   --radius-md: 8px;
-  --radius-lg: 14px;
+  --radius-lg: 10px;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -54,7 +66,7 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -66,6 +78,12 @@ table,
 
 a {
   color: var(--color-accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-accent-strong);
+  text-decoration: underline;
 }
 
 button {

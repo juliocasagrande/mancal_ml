@@ -7,9 +7,9 @@ import pageStyles from './Page.module.css'
 import styles from './ModelLabPage.module.css'
 
 const MODEL_COLORS: Record<string, string> = {
-  baseline_zscore: '#34d399',
-  isolation_forest: '#fbbf24',
-  lstm_autoencoder: '#22d3ee',
+  baseline_zscore: 'oklch(0.64 0.13 145)',
+  isolation_forest: 'oklch(0.72 0.15 70)',
+  lstm_autoencoder: 'oklch(0.36 0.045 255)',
 }
 
 const DECISION_MATRIX = {
@@ -116,7 +116,7 @@ export function ModelLabPage() {
                     type="monotone"
                     dataKey={`${ev.model_name}_precision`}
                     name={ev.model_name}
-                    stroke={MODEL_COLORS[ev.model_name] ?? '#94a7c0'}
+                    stroke={MODEL_COLORS[ev.model_name] ?? 'var(--color-text-faint)'}
                     dot={false}
                     isAnimationActive={false}
                   />

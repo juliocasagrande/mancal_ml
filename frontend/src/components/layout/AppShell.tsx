@@ -26,9 +26,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <header className={styles.header}>
         <div className={styles.brand}>
-          <span className={styles.brandMark} aria-hidden="true" />
+          <span className={styles.brandMark} aria-hidden="true">
+            <span className={styles.brandMarkDiamond} />
+          </span>
           <div>
-            <div className={styles.brandTitle}>Hydro Condition Intelligence</div>
+            <div className={styles.brandTitle}>Mancal Guard</div>
             <div className={styles.brandSubtitle}>Mancal-guia · Unidade G1</div>
           </div>
         </div>

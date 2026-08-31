@@ -25,7 +25,7 @@
 }
 
 .retryButton:hover {
-  background: rgba(34, 211, 238, 0.2);
+  background: var(--color-accent-bg);
 }
 
 @keyframes spin {

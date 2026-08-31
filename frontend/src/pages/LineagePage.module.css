@@ -42,25 +42,24 @@
 
 .statusPill {
   display: inline-block;
-  padding: 2px var(--space-2);
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
+  padding: 2px 9px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .active {
-  color: var(--color-normal);
-  background: rgba(52, 211, 153, 0.12);
+  color: var(--color-normal-fg);
+  background: var(--color-normal-bg);
 }
 
 .candidate {
-  color: var(--color-text-muted);
-  background: var(--color-bg-raised);
+  color: var(--color-attention-fg);
+  background: var(--color-attention-bg);
 }
 
 .archived {
-  color: var(--color-text-faint);
+  color: var(--color-text-muted);
   background: var(--color-bg-raised);
 }
 
@@ -71,18 +70,18 @@
 }
 
 .drift_none {
-  color: var(--color-normal);
-  background: rgba(52, 211, 153, 0.12);
+  color: var(--color-normal-fg);
+  background: var(--color-normal-bg);
 }
 
 .drift_moderate {
-  color: var(--color-attention);
-  background: rgba(251, 191, 36, 0.12);
+  color: var(--color-attention-fg);
+  background: var(--color-attention-bg);
 }
 
 .drift_significant {
-  color: var(--color-alert);
-  background: rgba(248, 113, 113, 0.12);
+  color: var(--color-alert-fg);
+  background: var(--color-alert-bg);
 }
 
 .drift_constante_no_treino {

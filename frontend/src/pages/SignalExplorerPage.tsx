@@ -9,7 +9,17 @@ import styles from './SignalExplorerPage.module.css'
 
 const MAX_RANGE_DAYS = 45
 const DEAD_CHANNEL = 'temp_lower_guide_pad1' // canal morto documentado — excluído da seleção padrão
-const SERIES_COLORS = ['#22d3ee', '#fbbf24', '#a78bfa', '#34d399', '#f472b6', '#f87171']
+const CHANNEL_COLORS: Record<string, string> = {
+  vibration_de: 'oklch(0.5 0.13 255)',
+  vibration_nde: 'oklch(0.58 0.17 25)',
+  temp_upper_guide_pad1: 'oklch(0.65 0.13 70)',
+  temp_lower_guide_pad1: 'oklch(0.55 0.09 300)',
+  unit_speed_pct: 'oklch(0.6 0.12 145)',
+}
+const FALLBACK_SERIES_COLORS = ['oklch(0.5 0.13 255)', 'oklch(0.65 0.13 70)', 'oklch(0.55 0.09 300)', 'oklch(0.6 0.12 145)', 'oklch(0.58 0.17 25)']
+function colorForChannel(channel: string, index: number): string {
+  return CHANNEL_COLORS[channel] ?? FALLBACK_SERIES_COLORS[index % FALLBACK_SERIES_COLORS.length]
+}
 
 function toLocalInputValue(iso: string): string {
   return new Date(iso).toISOString().slice(0, 16)
@@ -50,7 +60,7 @@ export function SignalExplorerPage() {
     .map((a) => ({ id: a.id, x1: new Date(a.window_start).getTime(), x2: new Date(a.window_end).getTime() }))
     .filter((r) => chartData.some((d) => d.timestampMs >= r.x1 && d.timestampMs <= r.x2))
 
-  const SPLIT_COLORS: Record<string, string> = { train: 'var(--color-normal)', validation: 'var(--color-accent)', test: 'var(--color-neutral)' }
+  const SPLIT_COLORS: Record<string, string> = { train: 'var(--color-normal)', validation: 'var(--color-neutral)', test: 'var(--color-accent)' }
   const splitRegions: Array<{ split: string; x1: number; x2: number }> = []
   for (const point of chartData) {
     const lastRegion = splitRegions.at(-1)
@@ -175,7 +185,7 @@ export function SignalExplorerPage() {
                     key={c}
                     type="monotone"
                     dataKey={c}
-                    stroke={SERIES_COLORS[i % SERIES_COLORS.length]}
+                    stroke={colorForChannel(c, i)}
                     dot={false}
                     isAnimationActive={false}
                     connectNulls
@@ -184,7 +194,7 @@ export function SignalExplorerPage() {
               </LineChart>
             </ResponsiveContainer>
             <p className={styles.legendNote}>
-              Fundo verde/ciano/roxo = região de treino/validação/teste. Fundo vermelho = janela com alerta.
+              Fundo verde/violeta/azul-grafite = região de treino/validação/teste. Fundo vermelho = janela com alerta.
             </p>
           </ChartWithFallback>
         </StateBoundary>
